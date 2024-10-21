@@ -257,6 +257,9 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
+        fun when is_function(fun, 3) ->
+          fun
+
         key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers] ->
           key
 
@@ -268,7 +271,7 @@ defmodule Phoenix.Socket.Transport do
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of &Mod.fun/arity, :peer_data, :trace_context_headers, :x_headers, :uri, or {:session, config}, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
@@ -462,6 +465,9 @@ defmodule Phoenix.Socket.Transport do
   def connect_info(conn, endpoint, keys) do
     for key <- keys, into: %{} do
       case key do
+        fun when is_function(fun, 3) ->
+          fun.(conn, endpoint, keys)
+
         :peer_data ->
           {:peer_data, Plug.Conn.get_peer_data(conn)}
 
