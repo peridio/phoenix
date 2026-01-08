@@ -769,8 +769,10 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      # we need to match on nil to handle v1 protocol (server stored nil)
+      # or when client sends nil join_ref (backwards compat with older clients like Slipstream)
+      %{^pid => {^topic, existing_join_ref}}
+          when join_ref == nil or existing_join_ref in [join_ref, nil] ->
         send(pid, msg)
         {:ok, {state, socket}}
 
